@@ -53,12 +53,10 @@ installAndroidSdkOnly() {
         mkdir -p $HOME/android
         cd $HOME/android
 
-        addToPath '## ## START ANDROID SDK ## ##'
         addToPath 'export ANDROID_HOME=/usr/local/share/android-commandlinetools'
         addToPath 'export PATH=$ANDROID_HOME/cmdline-tools/tools/bin/:$PATH'
         addToPath 'export PATH=$ANDROID_HOME/emulator/:$PATH'
         addToPath 'export PATH=$ANDROID_HOME/platform-tools/:$PATH'
-        addToPath '## ## END ANDROID SDK ## ##'
         
         source ~/.bash_profile
         
@@ -74,10 +72,8 @@ installFlutter() {
     if [[ $? != 0 ]] ; then
         install flutter 'brew --cask flutter'
 
-        addToPath '## ## START FLUTTER ## ##'
         addToPath 'export PATH="`pwd`/flutter/bin:$PATH"'
-        addToPath '## ## END FLUTTER ## ##'
-
+        
         flutter config --android-sdk $ANDROID_HOME
         flutter doctor --android-licenses
         flutter doctor
