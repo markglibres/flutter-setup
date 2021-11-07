@@ -1,5 +1,9 @@
 #!/bin/bash
 
+addToPath() {
+    grep -qxF "$1" ~/.bash_profile || echo "$1" >> ~/.bash_profile
+}
+
 install() {
     which -s $1
     if [[ $? != 0 ]] ; then
@@ -49,12 +53,13 @@ installAndroidSdkOnly() {
         mkdir -p $HOME/android
         cd $HOME/android
 
-        grep -qxF '## ## START ANDROID SDK ## ##' ~/.bash_profile || echo '\n## ## START ANDROID SDK ## ##' >> ~/.bash_profile
-        grep -qxF 'export ANDROID_HOME=/usr/local/share/android-commandlinetools' ~/.bash_profile || echo 'export ANDROID_HOME=/usr/local/share/android-commandlinetools' >> ~/.bash_profile
-        grep -qxF 'export PATH=$ANDROID_HOME/cmdline-tools/tools/bin/:$PATH' ~/.bash_profile || echo 'export PATH=$ANDROID_HOME/cmdline-tools/tools/bin/:$PATH' >> ~/.bash_profile
-        grep -qxF 'export PATH=$ANDROID_HOME/emulator/:$PATH' ~/.bash_profile || echo 'export PATH=$ANDROID_HOME/emulator/:$PATH' >> ~/.bash_profile
-        grep -qxF 'export PATH=$ANDROID_HOME/platform-tools/:$PATH' ~/.bash_profile || echo 'export PATH=$ANDROID_HOME/platform-tools/:$PATH' >> ~/.bash_profile
-        grep -qxF '## ## END ANDROID SDK ## ##' ~/.bash_profile || echo '## ## END ANDROID SDK ## ##\n' >> ~/.bash_profile
+        addToPath '## ## START ANDROID SDK ## ##'
+        addToPath 'export ANDROID_HOME=/usr/local/share/android-commandlinetools'
+        addToPath 'export PATH=$ANDROID_HOME/cmdline-tools/tools/bin/:$PATH'
+        addToPath 'export PATH=$ANDROID_HOME/emulator/:$PATH'
+        addToPath 'export PATH=$ANDROID_HOME/platform-tools/:$PATH'
+        addToPath '## ## END ANDROID SDK ## ##'
+        
         source ~/.bash_profile
         
         sdkmanager --install "platform-tools" "platforms;android-${PLATFORM_VERSION}" "build-tools;${BUILD_TOOLS_VERSION}" "cmdline-tools;latest"
@@ -69,18 +74,14 @@ installFlutter() {
     if [[ $? != 0 ]] ; then
         install flutter 'brew --cask flutter'
 
-        grep -qxF '## ## START FLUTTER ## ##' ~/.bash_profile || echo '\n## ## START FLUTTER ## ##' >> ~/.bash_profile
-        grep -qxF 'export PATH="`pwd`/flutter/bin:$PATH"' ~/.bash_profile || echo 'export PATH="`pwd`/flutter/bin:$PATH"' >> ~/.bash_profile
-        grep -qxF '## ## END FLUTTER ## ##' ~/.bash_profile || echo '## ## END FLUTTER ## ##\n' >> ~/.bash_profile
-        
+        addToPath '## ## START FLUTTER ## ##'
+        addToPath 'export PATH="`pwd`/flutter/bin:$PATH"'
+        addToPath '## ## END FLUTTER ## ##'
+
         flutter config --android-sdk $ANDROID_HOME
         flutter doctor --android-licenses
         flutter doctor
     else
         echo "xcode found.. skipping... "
     fi
-}
-
-addPath() {
-    grep -qxF "$1" ~/.bash_profile || echo "$1" >> ~/.bash_profile
 }
