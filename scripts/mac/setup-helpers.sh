@@ -33,7 +33,8 @@ installXCode() {
     fi
 }
 
-installAndroid() {
+installAndroidSdkOnly() {
+    source ~/.bash_profile
     install java 'brew install --cask oracle-jdk'
     if [ -z "${ANDROID_HOME}" ]
     then
@@ -63,6 +64,7 @@ installAndroid() {
 }
 
 installFlutter() {
+    source ~/.bash_profile
     which -s flutter
     if [[ $? != 0 ]] ; then
         install flutter 'brew --cask flutter'
@@ -70,12 +72,15 @@ installFlutter() {
         grep -qxF '## ## START FLUTTER ## ##' ~/.bash_profile || echo '\n## ## START FLUTTER ## ##' >> ~/.bash_profile
         grep -qxF 'export PATH="`pwd`/flutter/bin:$PATH"' ~/.bash_profile || echo 'export PATH="`pwd`/flutter/bin:$PATH"' >> ~/.bash_profile
         grep -qxF '## ## END FLUTTER ## ##' ~/.bash_profile || echo '## ## END FLUTTER ## ##\n' >> ~/.bash_profile
-        source ~/.bash_profile
-
+        
         flutter config --android-sdk $ANDROID_HOME
         flutter doctor --android-licenses
         flutter doctor
     else
         echo "xcode found.. skipping... "
     fi
+}
+
+addPath() {
+    grep -qxF "$1" ~/.bash_profile || echo "$1" >> ~/.bash_profile
 }
