@@ -41,10 +41,15 @@ installAndroidSdkOnly() {
     install java 'brew install --cask adoptopenjdk8'
     which -s sdkmanager
     if [[ $? != 0 ]] ; then
-        COMMAND_LINE_TOOL_VERSION=7583922
+        COMMAND_LINE_TOOL_VERSION=$1
+        PLATFORM_VERSION=$2
+        BUILD_TOOLS_VERSION=$3
+
+        
         COMMAND_LINE_TOOL_FILE=commandlinetools-mac-${COMMAND_LINE_TOOL_VERSION}_latest.zip
-        PLATFORM_VERSION=$1
-        BUILD_TOOLS_VERSION=$2
+        PLATFORM_VERSION=$2
+        BUILD_TOOLS_VERSION=$3
+
         echo "versions ${PLATFORM_VERSION} ${BUILD_TOOLS_VERSION}"
         
         cd $HOME
@@ -69,7 +74,8 @@ installAndroidSdkOnly() {
         cd tools/bin
         sdkmanager --update
         sdkmanager --install \
-            "platform-tools" "platforms;android-${PLATFORM_VERSION}" \
+            "platform-tools" \
+            "platforms;android-${PLATFORM_VERSION}" \
             "build-tools;${BUILD_TOOLS_VERSION}" \
             "cmdline-tools;latest" \
             "system-images;android-${PLATFORM_VERSION};google_apis;x86_64"
