@@ -38,29 +38,44 @@ installXCode() {
 }
 
 installAndroidSdkOnly() {
-    source ~/.bash_profile
-    install java 'brew install --cask oracle-jdk'
-    if [ -z "${ANDROID_HOME}" ]
-    then
-        echo 'test'
+    install java 'brew install --cask adoptopenjdk8'
+    which -s sdkmanager
+    if [[ $? != 0 ]] ; then
+        COMMAND_LINE_TOOL_VERSION=7583922
+        COMMAND_LINE_TOOL_FILE=commandlinetools-mac-${COMMAND_LINE_TOOL_VERSION}_latest.zip
         PLATFORM_VERSION=$1
         BUILD_TOOLS_VERSION=$2
         echo "versions ${PLATFORM_VERSION} ${BUILD_TOOLS_VERSION}"
         
-        brew install --cask android-commandlinetools
-        sdkmanager
+        cd $HOME
+        ANDROID_HOME=$HOME/Library/Android/sdk
+        COMMAND_LINE_TOOL_PATH=$ANDROID_HOME/cmdline-tools
 
-        mkdir -p $HOME/android
-        cd $HOME/android
+        mkdir -p $COMMAND_LINE_TOOL_PATH
+        cd $COMMAND_LINE_TOOL_PATH
 
-        addToPath 'export ANDROID_HOME=/usr/local/share/android-commandlinetools'
+        curl -O https://dl.google.com/android/repository/${COMMAND_LINE_TOOL_FILE}
+        unzip ${COMMAND_LINE_TOOL_FILE}
+        mv cmdline-tools tools
+
+        addToPath 'export ANDROID_HOME=$HOME/Library/Android/sdk'
         addToPath 'export PATH=$ANDROID_HOME/cmdline-tools/tools/bin/:$PATH'
+        addToPath 'export PATH=$ANDROID_HOME/cmdline-tools/latest/bin/:$PATH'
         addToPath 'export PATH=$ANDROID_HOME/emulator/:$PATH'
         addToPath 'export PATH=$ANDROID_HOME/platform-tools/:$PATH'
         
         source ~/.bash_profile
-        
-        sdkmanager --install "platform-tools" "platforms;android-${PLATFORM_VERSION}" "build-tools;${BUILD_TOOLS_VERSION}" "cmdline-tools;latest"
+
+        cd tools/bin
+        sdkmanager --update
+        sdkmanager --install \
+            "platform-tools" "platforms;android-${PLATFORM_VERSION}" \
+            "build-tools;${BUILD_TOOLS_VERSION}" \
+            "cmdline-tools;latest" \
+            "system-images;android-${PLATFORM_VERSION};google_apis;x86_64"
+
+        avdmanager create avd -n "Android${PLATFORM_VERSION}" -k "system-images;android-${PLATFORM_VERSION};google_apis;x86_64"
+
     else
         echo "Android already setup...skipping"
     fi
