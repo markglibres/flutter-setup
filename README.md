@@ -2,12 +2,18 @@
 This guide will help anyone install and run their first Flutter on a jiffy!
 
  1. Checkout this repo
-	 `git clone https://github.com/markglibres/flutter-setup.git`
+	 ```bash
+	 git clone https://github.com/markglibres/flutter-setup.git
+	 ```
  2. Change directory
-	 `cd flutter-setup` 
+	 ```bash
+	 cd flutter-setup
+	 ```
 	 
  3. Execute setup script
-	 `./scripts/mac/setup.sh`
+	 ```bash
+	 ./scripts/mac/setup.sh
+	 ```
 	 
  4. Create your first Flutter app
 	 ```bash
