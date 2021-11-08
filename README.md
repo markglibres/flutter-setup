@@ -1,8 +1,8 @@
 
 # Setup Flutter
 
-This guide will help anyone install and run their first Flutter on a jiffy!
- 
+This guide will help anyone install and run their first Flutter (with VS Code) on a jiffy!
+
 
 1. Checkout this repo
 
