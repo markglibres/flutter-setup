@@ -30,7 +30,6 @@ This guide will help anyone install and run their first Flutter (with VS Code) o
 	```
 
 ## Run flutter app with an iOS simulator
-*Note: with the changes made on `~/.bash_profile`, make sure to run first the command `source ~/.bash_profile` if you haven't started the machine after executing the setup script*
 
 1. Open iOS Simulator manually or thru the commands below
 
@@ -55,7 +54,6 @@ This guide will help anyone install and run their first Flutter (with VS Code) o
 4. Your flutter app should be running within the iOS simulator
 
 ## Run flutter app with an Android Emulator
-*Note: with the changes made on `~/.bash_profile`, make sure to run first the command `source ~/.bash_profile` if you haven't started the machine after executing the setup script*
 
 1. The setup script created an emulator called "Android31". All we need to do is run it by the command:
 
