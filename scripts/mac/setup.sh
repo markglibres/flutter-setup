@@ -52,3 +52,5 @@ installVSCodeExtension Dart-Code.flutter
 
 flutter doctor
 
+sourceEnv
+

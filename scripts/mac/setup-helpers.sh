@@ -1,11 +1,7 @@
 #!/bin/bash
 
-addToPath() {
-    grep -qxF "$1" ~/.bash_profile || echo "$1" >> ~/.bash_profile
-}
-
 install() {
-    source ~/.bash_profile
+    sourceEnv
     which -s $1
     if [[ $? != 0 ]] ; then
         echo "$1 not found... installing...."
@@ -16,7 +12,7 @@ install() {
 }
 
 installApp() {
-    source ~/.bash_profile
+    sourceEnv
     APP="/Applications/$1.app"
     if [ -d "$APP" ]; then
         echo "$APP found... skipping...."
@@ -40,7 +36,7 @@ installXCode() {
 }
 
 installAndroidSdkOnly() {
-    source ~/.bash_profile
+    sourceEnv
     install java 'brew install --cask adoptopenjdk8'
 
     COMMAND_LINE_TOOL_VERSION=$1
@@ -74,7 +70,7 @@ installAndroidSdkOnly() {
         
         cd tools/bin
     else
-        echo "Android already setup...skipping"
+       echo "Android already setup...skipping"
     fi
 
     installAndroidPackage "platform-tools"
@@ -85,7 +81,7 @@ installAndroidSdkOnly() {
 }
 
 installAndroidPackage() {
-    source ~/.bash_profile
+    sourceEnv
     which -s sdkmanager
     if [[ $? == 0 ]] ; then
         INSTALLED_PACKAGES=$(sdkmanager --list_installed)
@@ -101,7 +97,7 @@ installAndroidPackage() {
 }
 
 installFlutter() {
-    source ~/.bash_profile
+    sourceEnv
     which -s flutter
     if [[ $? != 0 ]] ; then
         install flutter 'brew --cask flutter'
@@ -112,18 +108,18 @@ installFlutter() {
         flutter doctor --android-licenses
         flutter doctor
     else
-        echo "xcode found.. skipping... "
+       echo "xcode found.. skipping... "
     fi
 }
 
 installVSCode() {
-    source ~/.bash_profile
+    sourceEnv
     installApp 'Visual Studio Code' 'brew install --cask visual-studio-code'
     addToPath 'export PATH="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/:$PATH"'
 }
 
 installVSCodeExtension() {
-    source ~/.bash_profile
+    sourceEnv
     which -s code
     if [[ $? == 0 ]] ; then
         INSTALLED_EXTENSIONS=$(code --list-extensions)
@@ -136,4 +132,25 @@ installVSCodeExtension() {
     else
         echo "Visual Studio Code not found.. skipping"
     fi
+}
+
+sourceEnv() {
+    ENVFILE=~/.bashrc
+    if [[ $SHELL == *zsh* ]]; then
+        ENVFILE=~/.zshrc
+    fi
+
+    source $ENVFILE
+}
+
+addToPath() {
+    if [ -f ~/.bashrc ]; then
+        touch ~/.bashrc
+    fi
+    if [ -f ~/.zshrc ]; then
+        touch ~/.zshrc
+    fi
+
+    grep -qxF "$1" ~/.bashrc || echo "$1" >> ~/.bashrc
+    grep -qxF "$1" ~/.zshrc || echo "$1" >> ~/.zshrc
 }
