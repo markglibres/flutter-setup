@@ -43,16 +43,12 @@ do
 done
 
 installXCode
-installAndroidSdkOnly $ANDROID_COMMAND_LINE_TOOLS_VERSION $ANDROID_PLATFORM_VERSION $ANDROID_BUILD_TOOLS_VERSION
-installFlutter
-
-installApp 'Visual Studio Code' 'brew install --cask visual-studio-code'
-
-addToPath 'export PATH="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/:$PATH"'
-source ~/.bash_profile
-code --install-extension Dart-Code.flutter
-flutter doctor
-
 install pod 'sudo gem install cocoapods'
 
+installAndroidSdkOnly $ANDROID_COMMAND_LINE_TOOLS_VERSION $ANDROID_PLATFORM_VERSION $ANDROID_BUILD_TOOLS_VERSION
+installFlutter
+installVSCode
+installVSCodeExtension Dart-Code.flutter
+
+flutter doctor
 
