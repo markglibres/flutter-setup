@@ -108,7 +108,7 @@ installFlutter() {
         flutter doctor --android-licenses
         flutter doctor
     else
-       echo "xcode found.. skipping... "
+       echo "flutter found.. skipping... "
     fi
 }
 
