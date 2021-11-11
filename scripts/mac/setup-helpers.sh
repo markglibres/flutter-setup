@@ -84,13 +84,14 @@ installAndroidPackage() {
     sourceEnv
     which -s sdkmanager
     if [[ $? == 0 ]] ; then
-        INSTALLED_PACKAGES=$(sdkmanager --list_installed)
-        if [[ ! $INSTALLED_PACKAGES == *"$1"* ]]; then
-            echo  "package $1 not found.. installing"
-            sdkmanager --install "$1"
-        else
-            echo  "package $1 already installed.. skipping"
-        fi
+        #INSTALLED_PACKAGES=$(sdkmanager --list_installed)
+        #if [[ ! $INSTALLED_PACKAGES == *"$1"* ]]; then
+        #    echo  "package $1 not found.. installing"
+        #    sdkmanager --install "$1"
+        #else
+        #    echo  "package $1 already installed.. skipping"
+        #fi
+        sdkmanager --install "$1"
     else
         echo "sdkmanager not found.. skipping package install $1"
     fi
