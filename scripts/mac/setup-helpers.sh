@@ -11,6 +11,19 @@ install() {
     fi
 }
 
+installTools() {
+    brew install rbenv
+    rbenv init
+    echo 'eval "$(rbenv init - zsh)"' >> ~/.zshrc
+    sourceEnv
+    rbenv install 3.1.0
+    rbenv global 3.1.0
+    sudo gem uninstall cocoapods
+    sudo gem install cocoapods
+    sudo gem uninstall fastlane
+    sudo gem install fastlane
+}
+
 installApp() {
     sourceEnv
     APP="/Applications/$1.app"
