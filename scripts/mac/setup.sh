@@ -43,7 +43,7 @@ do
 done
 
 installXCode
-install pod 'sudo gem install cocoapods'
+installTools
 
 installAndroidSdkOnly $ANDROID_COMMAND_LINE_TOOLS_VERSION $ANDROID_PLATFORM_VERSION $ANDROID_BUILD_TOOLS_VERSION
 installFlutter
