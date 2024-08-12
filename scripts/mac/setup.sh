@@ -42,6 +42,7 @@ do
     esac
 done
 
+sudo softwareupdate --install-rosetta --agree-to-license
 installXCode
 installTools
 
