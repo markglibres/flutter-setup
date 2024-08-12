@@ -12,14 +12,18 @@ install() {
 }
 
 installTools() {
+    sudo gem uninstall cocoapods
+    sudo gem install cocoapods
+    
+}
+
+installFastlane() {
     brew install rbenv
     echo 'eval "$(rbenv init - zsh)"' >> ~/.zshrc
     echo 'eval "$(rbenv init - bash)"' >> ~/.bashrc
     sourceEnv
     rbenv install 3.1.0
     rbenv global 3.1.0
-    sudo gem uninstall cocoapods
-    sudo gem install cocoapods
     sudo gem uninstall fastlane
     sudo gem install fastlane
 }
