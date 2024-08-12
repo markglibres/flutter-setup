@@ -45,6 +45,7 @@ done
 sudo softwareupdate --install-rosetta --agree-to-license
 installXCode
 installTools
+installFastlane
 
 installAndroidSdkOnly $ANDROID_COMMAND_LINE_TOOLS_VERSION $ANDROID_PLATFORM_VERSION $ANDROID_BUILD_TOOLS_VERSION
 installFlutter
