@@ -100,9 +100,16 @@ installXCode() {
         echo "Xcode Command Line Tools are already installed."
     fi
     
+    # Set the active developer directory to Xcode
+    echo "Setting the active developer directory to Xcode..."
+    sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+    
     # Accept the Xcode license agreement
     echo "Accepting the Xcode license agreement..."
     sudo xcodebuild -license accept
+    
+    echo "Xcode license has been accepted and the developer directory is set correctly."
+
     
     echo "All done! You can now use Xcode and command line tools without issues."
     
