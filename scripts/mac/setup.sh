@@ -44,6 +44,7 @@ done
 
 sudo softwareupdate --install-rosetta --agree-to-license
 installXCode
+installiOSSimulator
 installTools
 installFastlane
 
