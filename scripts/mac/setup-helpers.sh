@@ -208,7 +208,16 @@ sourceEnv() {
         ENVFILE=~/.zshrc
     fi
 
+    # Check if the file exists; if not, create it
+    if [ ! -f "$ENVFILE" ]; then
+        echo "$ENVFILE does not exist. Creating it now..."
+        touch "$ENVFILE"
+        echo "$ENVFILE has been created."
+    fi
+    
+    # Source the file
     source $ENVFILE
+    echo "Sourced $ENVFILE successfully."
 }
 
 addToPath() {
