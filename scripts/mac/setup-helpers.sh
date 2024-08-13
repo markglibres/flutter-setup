@@ -348,8 +348,13 @@ installAndroidStudio() {
         brew install --cask android-studio
         echo "Android Studio installation complete."
     elif [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
-        echo "Installed version of Android Studio ($INSTALLED_VERSION) is outdated. Reinstalling to update to version $LATEST_VERSION..."
-        brew reinstall --cask android-studio
+        echo "Installed version of Android Studio ($INSTALLED_VERSION) is outdated. Uninstalling and reinstalling to update to version $LATEST_VERSION..."
+        
+        # Uninstall the existing Android Studio
+        brew uninstall --cask android-studio
+        
+        # Reinstall the latest version of Android Studio
+        brew install --cask android-studio
         echo "Android Studio updated to version $LATEST_VERSION."
     else
         echo "Android Studio is already up-to-date (version $INSTALLED_VERSION)."
@@ -364,8 +369,14 @@ installAndroidStudio() {
         open -a "Android Studio"
         
         echo "Please complete the initial setup wizard in Android Studio to install the Android SDK."
-        echo "After the setup is complete, re-run this script to configure the SDK with Flutter."
-        exit 1
+        echo "Waiting for Android Studio to close before continuing..."
+    
+        # Wait for Android Studio to close
+        while pgrep -x "studio" > /dev/null; do
+            sleep 5
+        done
+        
+        echo "Android Studio has closed. Continuing with the script..."
     else
         echo "Android SDK found at $ANDROID_HOME"
     fi
