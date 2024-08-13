@@ -324,18 +324,45 @@ installVSCode() {
 }
 
 installVSCodeExtension() {
-    sourceEnv
-    if command -v code &> /dev/null; then
-        if ! code --list-extensions | grep -q "$1"; then
-            echo "VS Code extension $1 not found.. installing"
-            code --install-extension $1
-        else
-            echo "VS Code extension $1 already installed.. skipping"
+    EXTENSION_NAME=$1
+    EXTENSION_INSTALLED=false
+    INSTALLED_VERSION=""
+    LATEST_VERSION=""
+    
+    # Check if the extension is installed
+    if command -v code >/dev/null 2>&1; then
+        INSTALLED_VERSION=$(code --list-extensions --show-versions | grep "^$EXTENSION_NAME@" | cut -d'@' -f2)
+        
+        if [ -n "$INSTALLED_VERSION" ]; then
+            echo "VS Code extension $EXTENSION_NAME is already installed with version $INSTALLED_VERSION."
+            EXTENSION_INSTALLED=true
         fi
     else
-        echo "Visual Studio Code not found.. skipping"
+        echo "Visual Studio Code is not installed. Please install it first."
+        return
+    fi
+    
+    # Fetch the latest version from the VS Code Marketplace
+    LATEST_VERSION=$(code --install-extension $EXTENSION_NAME --force --dry-run 2>&1 | grep "Installing extension '$EXTENSION_NAME'" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+    
+    if [ -z "$LATEST_VERSION" ]; then
+        echo "Failed to retrieve the latest version of the extension $EXTENSION_NAME."
+        return
+    fi
+    
+    if [ "$EXTENSION_INSTALLED" = true ]; then
+        if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
+            echo "Upgrading $EXTENSION_NAME from version $INSTALLED_VERSION to $LATEST_VERSION..."
+            code --install-extension $EXTENSION_NAME --force
+        else
+            echo "VS Code extension $EXTENSION_NAME is up-to-date with version $INSTALLED_VERSION."
+        fi
+    else
+        echo "Installing VS Code extension $EXTENSION_NAME..."
+        code --install-extension $EXTENSION_NAME
     fi
 }
+
 
 installApp() {
     sourceEnv
