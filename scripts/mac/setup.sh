@@ -50,7 +50,8 @@ installTools
 installFastlane
 
 # installAndroidSdkOnly $ANDROID_COMMAND_LINE_TOOLS_VERSION $ANDROID_PLATFORM_VERSION $ANDROID_BUILD_TOOLS_VERSION
-installAndroidStudio
+# installAndroidStudio
+installAndroidStudioAndSdk
 installFlutter
 installVSCode
 installVSCodeExtension Dart-Code.flutter
