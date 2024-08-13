@@ -187,6 +187,67 @@ installAndroidSdkOnly() {
     installAndroidPackage "system-images;android-${PLATFORM_VERSION};google_apis;x86_64"
 }
 
+installAndroidStudio() {
+    # Install Homebrew if it's not installed
+    if ! command -v brew >/dev/null 2>&1; then
+        echo "Homebrew is not installed. Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    else
+        echo "Homebrew is already installed."
+    fi
+    
+    # Install Android Studio via Homebrew
+    if ! brew list --cask | grep -q "^android-studio$"; then
+        echo "Installing Android Studio..."
+        brew install --cask android-studio
+    else
+        echo "Android Studio is already installed."
+    fi
+    
+    # Check if Android Studio SDK exists or install it
+    ANDROID_HOME=$HOME/Library/Android/sdk
+    if [ ! -d "$ANDROID_HOME" ]; then
+        echo "Android SDK not found. Installing Android SDK..."
+        
+        # Open Android Studio to trigger the initial setup wizard
+        open -a "Android Studio"
+        
+        echo "Please complete the initial setup wizard in Android Studio to install the Android SDK."
+        echo "After the setup is complete, re-run this script to configure the SDK with Flutter."
+        exit 1
+    else
+        echo "Android SDK found at $ANDROID_HOME"
+    fi
+    
+    # Add Android SDK to PATH
+    SHELL_CONFIG_FILE=""
+    if [[ $SHELL == *zsh* ]]; then
+        SHELL_CONFIG_FILE=~/.zprofile
+    elif [[ $SHELL == *bash* ]]; then
+        SHELL_CONFIG_FILE=~/.bash_profile
+    else
+        SHELL_CONFIG_FILE=~/.profile
+    fi
+    
+    if ! grep -q "export ANDROID_HOME=$ANDROID_HOME" "$SHELL_CONFIG_FILE"; then
+        echo "Adding Android SDK to PATH in $SHELL_CONFIG_FILE"
+        echo "export ANDROID_HOME=$ANDROID_HOME" >> "$SHELL_CONFIG_FILE"
+        echo "export PATH=\$PATH:\$ANDROID_HOME/emulator:\$ANDROID_HOME/tools:\$ANDROID_HOME/tools/bin:\$ANDROID_HOME/platform-tools" >> "$SHELL_CONFIG_FILE"
+        source "$SHELL_CONFIG_FILE"
+    else
+        echo "Android SDK is already in the PATH."
+    fi
+    
+    # Configure Flutter to use the Android SDK
+    flutter config --android-sdk "$ANDROID_HOME"
+    
+    # Run Flutter doctor to verify the installation
+    flutter doctor
+    
+    echo "Android SDK installation and configuration are complete."
+    echo "Please restart your terminal or run 'source $SHELL_CONFIG_FILE' to apply the changes."
+}
+
 installAndroidPackage() {
     sourceEnv
     which -s sdkmanager
