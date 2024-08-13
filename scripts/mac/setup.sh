@@ -42,15 +42,25 @@ do
     esac
 done
 
-installBrew
 sudo softwareupdate --install-rosetta --agree-to-license
-installXCode
-installiOSSimulator
-installTools
-installFastlane
 
+# installBrew
+# installXCode
+# installiOSSimulator
+# installTools
+# installFastlane
 # installAndroidSdkOnly $ANDROID_COMMAND_LINE_TOOLS_VERSION $ANDROID_PLATFORM_VERSION $ANDROID_BUILD_TOOLS_VERSION
 # installAndroidStudio
+# installAndroidStudioAndSdk
+# installFlutter
+# installVSCode
+
+set_homebrew_path
+installBrew
+installXCode
+installiOSSimulator
+installCocoaPods
+installFastlane
 installAndroidStudioAndSdk
 installFlutter
 installVSCode
