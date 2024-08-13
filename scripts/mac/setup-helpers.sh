@@ -13,6 +13,7 @@ set_homebrew_path() {
 }
 
 # Add a command to the appropriate shell configuration file and source it
+# Add to PATH and source configuration file
 addToPath() {
     LINE=$1
     SHELL_CONFIG_FILE=$(get_shell_config_file)
@@ -21,7 +22,9 @@ addToPath() {
     [ ! -f "$SHELL_CONFIG_FILE" ] && touch "$SHELL_CONFIG_FILE"
 
     # Add the line to the configuration file if it's not already present
-    grep -qxF "$LINE" "$SHELL_CONFIG_FILE" || echo "$LINE" >> "$SHELL_CONFIG_FILE"
+    if ! grep -qxF "$LINE" "$SHELL_CONFIG_FILE"; then
+        echo "$LINE" >> "$SHELL_CONFIG_FILE"
+    fi
 
     # Source the configuration file to apply the changes
     source "$SHELL_CONFIG_FILE"
@@ -90,17 +93,20 @@ add_brew_to_path() {
     fi
 }
 
+# Function to add CocoaPods to the PATH
 installCocoaPods() {
     if gem list -i "^cocoapods$" >/dev/null 2>&1; then
         echo "CocoaPods is already installed."
-        addToPath "$(get_cocoapods_path)"
+        COCOAPODS_PATH=$(get_cocoapods_path)
+        addToPath "export PATH=\$PATH:$COCOAPODS_PATH"
     else
         echo "CocoaPods is not installed. Installing now..."
         sudo gem install cocoapods
-        addToPath "$(get_cocoapods_path)"
+        COCOAPODS_PATH=$(get_cocoapods_path)
+        addToPath "export PATH=\$PATH:$COCOAPODS_PATH"
         echo "CocoaPods installation complete."
     fi
-    
+
     sourceEnv
 
     # Verify CocoaPods installation
@@ -113,7 +119,13 @@ installCocoaPods() {
 }
 
 get_cocoapods_path() {
-    gem environment | grep -E 'EXECUTABLE DIRECTORY' | awk '{print $3}'
+    PODS_PATH=$(gem environment | grep -E 'EXECUTABLE DIRECTORY' | awk -F': ' '{print $2}')
+    if [ -n "$PODS_PATH" ]; then
+        echo "$PODS_PATH"
+    else
+        echo "Error: Unable to determine CocoaPods executable directory."
+        exit 1
+    fi
 }
 
 # Function to install rbenv and Ruby
