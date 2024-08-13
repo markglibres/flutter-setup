@@ -414,6 +414,14 @@ installAndroidStudio() {
         source "$SHELL_CONFIG_FILE"
     fi
     
+    # Install the latest cmdline-tools
+    echo "Installing the latest cmdline-tools..."
+    "$SDKMANAGER" --install "cmdline-tools;latest"
+    
+    # Accept all Android SDK licenses
+    echo "Accepting Android SDK licenses..."
+    yes | "$SDKMANAGER" --licenses
+
     # Configure Flutter to use the Android SDK
     flutter config --android-sdk "$ANDROID_HOME"
     
