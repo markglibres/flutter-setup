@@ -74,10 +74,28 @@ installXCode() {
         xcode-select --install
         sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer/
         sudo xcodebuild -runFirstLaunch
-        sudo xcodebuild -license
     else
         echo "xcode found.. skipping... "
     fi
+
+    sourceEnv
+    
+    # Install Command Line Tools if not already installed
+    echo "Checking for Xcode Command Line Tools..."
+    if ! xcode-select --install 2>&1 | grep -q "already installed"; then
+        echo "Installing Xcode Command Line Tools..."
+        xcode-select --install
+    else
+        echo "Xcode Command Line Tools are already installed."
+    fi
+    
+    # Accept the Xcode license agreement
+    echo "Accepting the Xcode license agreement..."
+    sudo xcodebuild -license accept
+    
+    echo "All done! You can now use Xcode and command line tools without issues."
+    
+
 }
 
 installiOSSimulator() {
