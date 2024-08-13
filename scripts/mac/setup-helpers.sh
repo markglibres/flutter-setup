@@ -509,8 +509,10 @@ installAndroidStudioAndSdk() {
 
     # Automatically get the latest command-line tool version
     COMMAND_LINE_TOOL_VERSION=$(curl -s https://dl.google.com/android/repository/repository2-1.xml \
-        | grep -oP 'commandlinetools-mac-\K[0-9]+' \
-        | sort -V | tail -1)
+    | grep -oE 'commandlinetools-mac-[0-9]+' \
+    | grep -oE '[0-9]+' \
+    | sort -V | tail -1)
+
     
     # Set the filenames
     COMMAND_LINE_TOOL_FILE="commandlinetools-mac-${COMMAND_LINE_TOOL_VERSION}_latest.zip"
