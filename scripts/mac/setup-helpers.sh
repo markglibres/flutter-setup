@@ -10,6 +10,30 @@ else
     exit 1
 fi
 
+# Function to add CocoaPods to the PATH
+add_cocoapods_to_path() {
+    SHELL_CONFIG_FILE=""
+    if [[ $SHELL == *zsh* ]]; then
+        SHELL_CONFIG_FILE=~/.zprofile
+    elif [[ $SHELL == *bash* ]]; then
+        SHELL_CONFIG_FILE=~/.bash_profile
+    else
+        # Default to ~/.profile if the shell is not recognized
+        SHELL_CONFIG_FILE=~/.profile
+    fi
+
+    PODS_PATH=$(gem environment | grep -E 'EXECUTABLE DIRECTORY' | awk '{print $3}')
+    
+    if ! grep -q "$PODS_PATH" "$SHELL_CONFIG_FILE"; then
+        echo "Adding CocoaPods to the PATH in $SHELL_CONFIG_FILE"
+        echo "export PATH=\$PATH:$PODS_PATH" >> "$SHELL_CONFIG_FILE"
+        source "$SHELL_CONFIG_FILE"
+        echo "CocoaPods successfully added to the PATH."
+    else
+        echo "CocoaPods is already in the PATH."
+    fi
+}
+
 # Add Homebrew to the PATH if not already present
 add_brew_to_path() {
     SHELL_CONFIG_FILE=""
@@ -73,8 +97,24 @@ install() {
 }
 
 installTools() {
-    sudo gem uninstall cocoapods
-    sudo gem install cocoapods
+    # Check if CocoaPods is installed
+    if gem list -i "^cocoapods$" >/dev/null 2>&1; then
+        echo "CocoaPods is already installed."
+        add_cocoapods_to_path
+    else
+        echo "CocoaPods is not installed. Installing now..."
+        sudo gem install cocoapods
+        add_cocoapods_to_path
+        echo "CocoaPods installation complete."
+    fi
+    
+    # Verify CocoaPods installation
+    if gem list -i "^cocoapods$" >/dev/null 2>&1; then
+        echo "CocoaPods was successfully installed!"
+        pod --version
+    else
+        echo "CocoaPods installation failed."
+    fi
     
 }
 
