@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Determine the correct Homebrew path based on architecture
+if [ -d "/opt/homebrew/bin" ]; then
+    HOMEBREW_PATH="/opt/homebrew/bin"
+elif [ -d "/usr/local/bin" ]; then
+    HOMEBREW_PATH="/usr/local/bin"
+else
+    echo "Homebrew installation not found in expected locations."
+    exit 1
+fi
+
+# Add Homebrew to the PATH if not already present
 add_brew_to_path() {
     SHELL_CONFIG_FILE=""
     if [[ $SHELL == *zsh* ]]; then
@@ -11,18 +22,20 @@ add_brew_to_path() {
         SHELL_CONFIG_FILE=~/.profile
     fi
 
-    # Add Homebrew to the PATH
-    if ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$SHELL_CONFIG_FILE"; then
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$SHELL_CONFIG_FILE"
-        eval "$(/opt/homebrew/bin/brew shellenv)"
-        echo "Homebrew added to the PATH in $SHELL_CONFIG_FILE."
+    if ! grep -q "eval \"\$($HOMEBREW_PATH/brew shellenv)\"" "$SHELL_CONFIG_FILE"; then
+        echo "Adding Homebrew to the PATH in $SHELL_CONFIG_FILE"
+        echo "eval \"\$($HOMEBREW_PATH/brew shellenv)\"" >> "$SHELL_CONFIG_FILE"
+        eval "$($HOMEBREW_PATH/brew shellenv)"
     else
         echo "Homebrew is already in the PATH."
+        eval "$($HOMEBREW_PATH/brew shellenv)"
     fi
 }
 
+
 installBrew() {
-    # Check for Homebrew
+   
+    # Check for Homebrew installation
     if command -v brew >/dev/null 2>&1; then
         echo "Homebrew is already installed"
         add_brew_to_path
@@ -32,7 +45,7 @@ installBrew() {
         
         # Add Homebrew to the PATH after installation
         add_brew_to_path
-        
+    
         echo "Homebrew installation complete"
     fi
     
@@ -41,7 +54,7 @@ installBrew() {
         echo "Homebrew was successfully installed!"
         brew --version
     else
-        echo "Homebrew installation failed"
+        echo "Homebrew installation failed or not found in PATH"
     fi
 
     sourceEnv
