@@ -52,6 +52,10 @@ installXCode() {
     fi
 }
 
+installiOSSimulator() {
+    xcodebuild -downloadPlatform iOS
+}
+
 installAndroidSdkOnly() {
     sourceEnv
     install java 'brew install --cask adoptopenjdk8'
