@@ -202,7 +202,7 @@ installFastlane() {
 installRuby() {
     # Check if rbenv is installed
     # Install a specific version of Ruby using rbenv
-    RUBY_VERSION="3.2.0"  # You can change this to any version you want to install
+    RUBY_VERSION="3.1.0"  # You can change this to any version you want to install
     
     if ! rbenv versions | grep -q "$RUBY_VERSION"; then
         echo "Installing Ruby version $RUBY_VERSION..."
