@@ -24,6 +24,8 @@ installBrew() {
         echo "Homebrew installation failed"
     fi
 
+    sourceEnv
+
 }
 
 install() {
