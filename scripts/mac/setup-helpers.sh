@@ -90,7 +90,6 @@ add_brew_to_path() {
     fi
 }
 
-# Function to install CocoaPods if not already installed
 installCocoaPods() {
     if gem list -i "^cocoapods$" >/dev/null 2>&1; then
         echo "CocoaPods is already installed."
