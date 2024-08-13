@@ -1,28 +1,37 @@
 #!/bin/bash
 
+add_brew_to_path() {
+    SHELL_CONFIG_FILE=""
+    if [[ $SHELL == *zsh* ]]; then
+        SHELL_CONFIG_FILE=~/.zprofile
+    elif [[ $SHELL == *bash* ]]; then
+        SHELL_CONFIG_FILE=~/.bash_profile
+    else
+        # Default to ~/.profile if the shell is not recognized
+        SHELL_CONFIG_FILE=~/.profile
+    fi
+
+    # Add Homebrew to the PATH
+    if ! grep -q 'eval "$(/opt/homebrew/bin/brew shellenv)"' "$SHELL_CONFIG_FILE"; then
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$SHELL_CONFIG_FILE"
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+        echo "Homebrew added to the PATH in $SHELL_CONFIG_FILE."
+    else
+        echo "Homebrew is already in the PATH."
+    fi
+}
+
 installBrew() {
-    # Script to install Homebrew on macOS
-    # Check for Homebrew, and install if it doesn't exist
+    # Check for Homebrew
     if command -v brew >/dev/null 2>&1; then
         echo "Homebrew is already installed"
+        add_brew_to_path
     else
         echo "Homebrew is not installed, installing now..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         
-        # Determine which shell configuration file to update
-        SHELL_CONFIG_FILE=""
-        if [[ $SHELL == *zsh* ]]; then
-            SHELL_CONFIG_FILE=~/.zprofile
-        elif [[ $SHELL == *bash* ]]; then
-            SHELL_CONFIG_FILE=~/.bash_profile
-        else
-            # Default to ~/.profile if the shell is not recognized
-            SHELL_CONFIG_FILE=~/.profile
-        fi
-    
-        # Add Homebrew to the PATH
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$SHELL_CONFIG_FILE"
-        eval "$(/opt/homebrew/bin/brew shellenv)"
+        # Add Homebrew to the PATH after installation
+        add_brew_to_path
         
         echo "Homebrew installation complete"
     fi
