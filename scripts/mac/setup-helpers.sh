@@ -1,5 +1,18 @@
 #!/bin/bash
 
+install() {
+    COMMAND=$1
+    INSTALL_CMD=$2
+
+    # Check if the command is available
+    if ! command -v "$COMMAND" >/dev/null 2>&1; then
+        echo "$COMMAND not found... installing...."
+        eval "$INSTALL_CMD"
+    else
+        echo "$COMMAND found... skipping..."
+    fi
+}
+
 # Determine the correct Homebrew path based on architecture
 set_homebrew_path() {
     if [ -d "/opt/homebrew/bin" ]; then
