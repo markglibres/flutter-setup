@@ -119,6 +119,8 @@ installBrew() {
     
         echo "Homebrew installation complete"
     fi
+
+    sourceEnv
     
     # Verify Homebrew installation
     if command -v brew >/dev/null 2>&1; then
@@ -155,6 +157,7 @@ installTools() {
         echo "CocoaPods installation complete."
     fi
     
+    sourceEnv
     # Verify CocoaPods installation
     if gem list -i "^cocoapods$" >/dev/null 2>&1; then
         echo "CocoaPods was successfully installed!"
@@ -186,6 +189,7 @@ installFastlane() {
         echo "Fastlane installation complete."
     fi
     
+    sourceEnv
     # Verify Fastlane installation
     if command -v fastlane >/dev/null 2>&1; then
         echo "Fastlane was successfully installed!"
@@ -436,21 +440,27 @@ installVSCodeExtension() {
 }
 
 sourceEnv() {
-    ENVFILE=~/.bashrc
+    # Determine which shell configuration file to use
+    SHELL_CONFIG_FILE=""
     if [[ $SHELL == *zsh* ]]; then
-        ENVFILE=~/.zshrc
-    fi
-
-    # Check if the file exists; if not, create it
-    if [ ! -f "$ENVFILE" ]; then
-        echo "$ENVFILE does not exist. Creating it now..."
-        touch "$ENVFILE"
-        echo "$ENVFILE has been created."
+        SHELL_CONFIG_FILE=~/.zprofile
+    elif [[ $SHELL == *bash* ]]; then
+        SHELL_CONFIG_FILE=~/.bash_profile
+    else
+        SHELL_CONFIG_FILE=~/.profile
     fi
     
-    # Source the file
-    source $ENVFILE
-    echo "Sourced $ENVFILE successfully."
+    # Check if the file exists, create it if it does not
+    if [ ! -f "$SHELL_CONFIG_FILE" ]; then
+        touch "$SHELL_CONFIG_FILE"
+        echo "$SHELL_CONFIG_FILE has been created."
+    fi
+    
+    # Source the shell configuration file to apply changes immediately
+    echo "Sourcing $SHELL_CONFIG_FILE to apply changes..."
+    source "$SHELL_CONFIG_FILE"
+    
+    echo "Path and environment variables refreshed in the current terminal session."
 }
 
 addToPath() {
