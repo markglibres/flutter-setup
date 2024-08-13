@@ -408,41 +408,49 @@ installAndroidStudio() {
         echo "Adding Android SDK to PATH in $SHELL_CONFIG_FILE"
         echo "export ANDROID_HOME=$ANDROID_HOME" >> "$SHELL_CONFIG_FILE"
         echo "export PATH=\$PATH:\$ANDROID_HOME/emulator:\$ANDROID_HOME/tools:\$ANDROID_HOME/tools/bin:\$ANDROID_HOME/platform-tools" >> "$SHELL_CONFIG_FILE"
-        source "$SHELL_CONFIG_FILE"
+        # source "$SHELL_CONFIG_FILE"
     else
         echo "Android SDK is already in the PATH."
-        source "$SHELL_CONFIG_FILE"
+        # source "$SHELL_CONFIG_FILE"
     fi
+    
+    sourceEnv
 
-    # Ensure sdkmanager is executable
-    SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+    # Ensure sdkmanager is executable by checking common locations
+    SDKMANAGER=""
     
-    if [ ! -x "$SDKMANAGER" ]; then
+    if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+        SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+    elif [ -x "$ANDROID_HOME/tools/bin/sdkmanager" ]; then
         SDKMANAGER="$ANDROID_HOME/tools/bin/sdkmanager"
-    fi
-    
-    # Check if sdkmanager is available
-    if [ ! -x "$SDKMANAGER" ]; then
+    else
         echo "sdkmanager not found. Please ensure the Android SDK is installed correctly."
+        echo "You may need to install the Command-line Tools via Android Studio or manually."
         exit 1
     fi
     
-    # Install the latest cmdline-tools
-    echo "Installing the latest cmdline-tools..."
-    "$SDKMANAGER" --install "cmdline-tools;latest"
+    # Install the latest cmdline-tools if sdkmanager is found
+    if [ -n "$SDKMANAGER" ]; then
+        echo "Installing the latest cmdline-tools..."
+        "$SDKMANAGER" --install "cmdline-tools;latest"
     
-    # Accept all Android SDK licenses
-    echo "Accepting Android SDK licenses..."
-    yes | "$SDKMANAGER" --licenses
-
-    # Configure Flutter to use the Android SDK
-    flutter config --android-sdk "$ANDROID_HOME"
+        # Accept all Android SDK licenses
+        echo "Accepting Android SDK licenses..."
+        yes | "$SDKMANAGER" --licenses
     
-    # Run Flutter doctor to verify the installation
-    flutter doctor
-    
-    echo "Android SDK installation and configuration are complete."
-    echo "Please restart your terminal or run 'source $SHELL_CONFIG_FILE' to apply the changes."
+        # Configure Flutter to use the Android SDK
+        flutter config --android-sdk "$ANDROID_HOME"
+        
+        # Run flutter doctor to check the status
+        echo "Running flutter doctor..."
+        flutter doctor
+        
+        echo "Android SDK installation and configuration are complete."
+        echo "Please restart your terminal or run 'source $SHELL_CONFIG_FILE' to apply the changes."
+        echo "Android SDK setup is complete."
+    else
+        echo "Error: sdkmanager is not available. Please check your Android SDK installation."
+    fi
 
 }
 
