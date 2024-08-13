@@ -131,6 +131,36 @@ uninstall_android_studio() {
     fi
 }
 
+# Function to install Android SDK and command-line tools using Homebrew
+install_android_sdk() {
+    echo "Installing Android SDK..."
+    brew install --cask android-sdk
+
+    echo "Installing Android SDK Command-line Tools..."
+    brew install --cask android-commandlinetools
+
+    # Set the environment variables for Android SDK
+    echo "Setting up Android SDK environment variables..."
+    SHELL_CONFIG_FILE=""
+    if [[ $SHELL == *zsh* ]]; then
+        SHELL_CONFIG_FILE=~/.zprofile
+    elif [[ $SHELL == *bash* ]]; then
+        SHELL_CONFIG_FILE=~/.bash_profile
+    else
+        SHELL_CONFIG_FILE=~/.profile
+    fi
+
+    echo "export ANDROID_HOME=$ANDROID_HOME" >> "$SHELL_CONFIG_FILE"
+    echo "export PATH=\$PATH:\$ANDROID_HOME/emulator:\$ANDROID_HOME/tools:\$ANDROID_HOME/tools/bin:\$ANDROID_HOME/platform-tools:\$ANDROID_HOME/cmdline-tools/latest/bin" >> "$SHELL_CONFIG_FILE"
+    source "$SHELL_CONFIG_FILE"
+    echo "Android SDK environment variables added to $SHELL_CONFIG_FILE"
+
+    # Create directories if they don't exist
+    mkdir -p "$ANDROID_HOME/cmdline-tools/latest/bin"
+
+    sourceEnv
+}
+
 installBrew() {
    
     # Check for Homebrew installation
@@ -416,8 +446,16 @@ installAndroidStudio() {
     
     sourceEnv
 
-    # Ensure sdkmanager is executable by checking common locations
-    SDKMANAGER=""
+    # Check if Android SDK is installed
+    if [ ! -d "$ANDROID_HOME" ]; then
+        echo "Android SDK not found. Installing the Android SDK and command-line tools..."
+        install_android_sdk
+    else
+        echo "Android SDK found at $ANDROID_HOME"
+    fi
+    
+    # Locate sdkmanager after installation
+    SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
     
     if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
         SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
