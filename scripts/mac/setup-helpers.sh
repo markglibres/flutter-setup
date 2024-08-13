@@ -492,6 +492,85 @@ installAndroidStudio() {
 
 }
 
+installAndroidStudioAndSdk() {
+    sourceEnv
+    install java 'brew install --cask adoptopenjdk8'
+
+    # Install Android Studio using Homebrew
+    if ! brew list --cask | grep -q "^android-studio$"; then
+        echo "Installing Android Studio..."
+        brew install --cask android-studio
+        echo "Android Studio installation complete."
+    else
+        echo "Android Studio is already installed."
+    fi
+
+    sourceEnv
+
+    # Automatically get the latest command-line tool version
+    COMMAND_LINE_TOOL_VERSION=$(curl -s https://dl.google.com/android/repository/repository2-1.xml \
+        | grep -oP 'commandlinetools-mac-\K[0-9]+' \
+        | sort -V | tail -1)
+    
+    # Set the filenames
+    COMMAND_LINE_TOOL_FILE="commandlinetools-mac-${COMMAND_LINE_TOOL_VERSION}_latest.zip"
+
+    # Set up paths
+    ANDROID_HOME=$HOME/Library/Android/sdk
+    COMMAND_LINE_TOOL_PATH=$ANDROID_HOME/cmdline-tools
+
+    which -s sdkmanager
+    if [[ $? != 0 ]] ; then
+        echo "Setting up Android SDK..."
+
+        mkdir -p $COMMAND_LINE_TOOL_PATH
+        cd $COMMAND_LINE_TOOL_PATH
+
+        curl -O https://dl.google.com/android/repository/${COMMAND_LINE_TOOL_FILE}
+        unzip ${COMMAND_LINE_TOOL_FILE}
+        mv cmdline-tools tools
+
+        addToPath 'export ANDROID_HOME=$HOME/Library/Android/sdk'
+        addToPath 'export PATH=$ANDROID_HOME/cmdline-tools/tools/bin/:$PATH'
+        addToPath 'export PATH=$ANDROID_HOME/cmdline-tools/latest/bin/:$PATH'
+        addToPath 'export PATH=$ANDROID_HOME/emulator/:$PATH'
+        addToPath 'export PATH=$ANDROID_HOME/platform-tools/:$PATH'
+        
+        cd tools/bin
+    else
+        echo "Android SDK already setup...skipping"
+    fi
+
+    sourceEnv
+
+    # Install necessary Android packages
+    installAndroidPackage "platform-tools"
+
+    # Get the latest platform version
+    PLATFORM_VERSION=$(sdkmanager --list | grep "platforms;android-" | grep -oP '[0-9]+' | sort -nr | head -n 1)
+    
+    # Get the latest build tools version
+    BUILD_TOOLS_VERSION=$(sdkmanager --list | grep "build-tools;" | grep -oP '[0-9]+\.[0-9]+\.[0-9]+' | sort -nr | head -n 1)
+
+    echo "Installing platform version: ${PLATFORM_VERSION}, build tools version: ${BUILD_TOOLS_VERSION}"
+
+    installAndroidPackage "platforms;android-${PLATFORM_VERSION}"
+    installAndroidPackage "build-tools;${BUILD_TOOLS_VERSION}"
+    installAndroidPackage "cmdline-tools;latest"
+    installAndroidPackage "system-images;android-${PLATFORM_VERSION};google_apis;x86_64"
+
+    sourceEnv
+
+    # Accept all Android SDK licenses
+    yes | sdkmanager --licenses
+
+    # Run flutter doctor to check the status
+    echo "Running flutter doctor..."
+    flutter doctor
+
+    echo "Android Studio and SDK setup is complete."
+}
+
 installAndroidPackage() {
     sourceEnv
     which -s sdkmanager
@@ -572,13 +651,29 @@ sourceEnv() {
 }
 
 addToPath() {
-    if [ -f ~/.bashrc ]; then
-        touch ~/.bashrc
-    fi
-    if [ -f ~/.zshrc ]; then
-        touch ~/.zshrc
+    LINE=$1
+
+    # Determine the appropriate shell configuration file
+    SHELL_CONFIG_FILE=""
+    if [[ $SHELL == *zsh* ]]; then
+        SHELL_CONFIG_FILE=~/.zshrc
+    elif [[ $SHELL == *bash* ]]; then
+        SHELL_CONFIG_FILE=~/.bashrc
+    else
+        SHELL_CONFIG_FILE=~/.profile
     fi
 
-    grep -qxF "$1" ~/.bashrc || echo "$1" >> ~/.bashrc
-    grep -qxF "$1" ~/.zshrc || echo "$1" >> ~/.zshrc
+    # Create the configuration file if it doesn't exist
+    if [ ! -f "$SHELL_CONFIG_FILE" ]; then
+        touch "$SHELL_CONFIG_FILE"
+    fi
+
+    # Add the line to the configuration file if it's not already present
+    if ! grep -qxF "$LINE" "$SHELL_CONFIG_FILE"; then
+        echo "$LINE" >> "$SHELL_CONFIG_FILE"
+    fi
+
+    # Source the configuration file to apply the changes
+    source "$SHELL_CONFIG_FILE"
 }
+
