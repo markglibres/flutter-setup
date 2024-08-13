@@ -42,6 +42,7 @@ do
     esac
 done
 
+installBrew
 sudo softwareupdate --install-rosetta --agree-to-license
 installXCode
 installiOSSimulator
