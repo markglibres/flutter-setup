@@ -1,5 +1,31 @@
 #!/bin/bash
 
+installBrew() {
+    # Script to install Homebrew on macOS
+    # Check for Homebrew, and install if it doesn't exist
+    if command -v brew >/dev/null 2>&1; then
+        echo "Homebrew is already installed"
+    else
+        echo "Homebrew is not installed, installing now..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+        # Add Homebrew to the PATH
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+        
+        echo "Homebrew installation complete"
+    fi
+    
+    # Verify Homebrew installation
+    if command -v brew >/dev/null 2>&1; then
+        echo "Homebrew was successfully installed!"
+        brew --version
+    else
+        echo "Homebrew installation failed"
+    fi
+
+}
+
 install() {
     sourceEnv
     which -s $1
