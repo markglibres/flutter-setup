@@ -118,6 +118,19 @@ get_android_studio_latest_version() {
     brew info android-studio | grep "android-studio:" | awk '{print $3}'
 }
 
+# Function to uninstall Android Studio if installed
+uninstall_android_studio() {
+    if brew list --cask | grep -q "android-studio"; then
+        echo "Uninstalling Android Studio using Homebrew..."
+        brew uninstall --cask android-studio
+    elif [ -d "/Applications/Android Studio.app" ]; then
+        echo "Removing manually installed Android Studio..."
+        rm -rf "/Applications/Android Studio.app"
+    else
+        echo "Android Studio is not installed."
+    fi
+}
+
 installBrew() {
    
     # Check for Homebrew installation
@@ -351,7 +364,7 @@ installAndroidStudio() {
         echo "Installed version of Android Studio ($INSTALLED_VERSION) is outdated. Uninstalling and reinstalling to update to version $LATEST_VERSION..."
         
         # Uninstall the existing Android Studio
-        brew uninstall --cask android-studio
+        uninstall_android_studio
         
         # Reinstall the latest version of Android Studio
         brew install --cask android-studio
