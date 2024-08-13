@@ -413,6 +413,19 @@ installAndroidStudio() {
         echo "Android SDK is already in the PATH."
         source "$SHELL_CONFIG_FILE"
     fi
+
+    # Ensure sdkmanager is executable
+    SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+    
+    if [ ! -x "$SDKMANAGER" ]; then
+        SDKMANAGER="$ANDROID_HOME/tools/bin/sdkmanager"
+    fi
+    
+    # Check if sdkmanager is available
+    if [ ! -x "$SDKMANAGER" ]; then
+        echo "sdkmanager not found. Please ensure the Android SDK is installed correctly."
+        exit 1
+    fi
     
     # Install the latest cmdline-tools
     echo "Installing the latest cmdline-tools..."
