@@ -104,6 +104,20 @@ add_fastlane_to_path() {
     fi
 }
 
+# Function to get the installed version of Android Studio
+get_android_studio_installed_version() {
+    if [ -d "/Applications/Android Studio.app" ]; then
+        /Applications/Android\ Studio.app/Contents/MacOS/studio -version | grep 'Android Studio' | awk '{print $3}'
+    else
+        echo "Not installed"
+    fi
+}
+
+# Function to get the latest version of Android Studio from Homebrew
+get_android_studio_latest_version() {
+    brew info android-studio | grep "android-studio:" | awk '{print $3}'
+}
+
 installBrew() {
    
     # Check for Homebrew installation
@@ -324,23 +338,24 @@ installAndroidSdkOnly() {
 }
 
 installAndroidStudio() {
-    # Install Homebrew if it's not installed
-    if ! command -v brew >/dev/null 2>&1; then
-        echo "Homebrew is not installed. Installing Homebrew..."
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    else
-        echo "Homebrew is already installed."
-    fi
+    # Get the installed and latest versions
+    INSTALLED_VERSION=$(get_android_studio_installed_version)
+    LATEST_VERSION=$(get_android_studio_latest_version)
     
-    # Install Android Studio via Homebrew
-    if ! brew list --cask | grep -q "^android-studio$"; then
-        echo "Installing Android Studio..."
+    # Check if Android Studio is installed and up-to-date
+    if [ "$INSTALLED_VERSION" == "Not installed" ]; then
+        echo "Android Studio is not installed. Installing now..."
         brew install --cask android-studio
+        echo "Android Studio installation complete."
+    elif [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
+        echo "Installed version of Android Studio ($INSTALLED_VERSION) is outdated. Reinstalling to update to version $LATEST_VERSION..."
+        brew reinstall --cask android-studio
+        echo "Android Studio updated to version $LATEST_VERSION."
     else
-        echo "Android Studio is already installed."
+        echo "Android Studio is already up-to-date (version $INSTALLED_VERSION)."
     fi
     
-    # Check if Android Studio SDK exists or install it
+    # Check if the Android SDK is installed
     ANDROID_HOME=$HOME/Library/Android/sdk
     if [ ! -d "$ANDROID_HOME" ]; then
         echo "Android SDK not found. Installing Android SDK..."
@@ -372,6 +387,7 @@ installAndroidStudio() {
         source "$SHELL_CONFIG_FILE"
     else
         echo "Android SDK is already in the PATH."
+        source "$SHELL_CONFIG_FILE"
     fi
     
     # Configure Flutter to use the Android SDK
@@ -382,6 +398,7 @@ installAndroidStudio() {
     
     echo "Android SDK installation and configuration are complete."
     echo "Please restart your terminal or run 'source $SHELL_CONFIG_FILE' to apply the changes."
+
 }
 
 installAndroidPackage() {
