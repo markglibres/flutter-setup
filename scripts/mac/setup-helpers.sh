@@ -56,6 +56,53 @@ add_brew_to_path() {
     fi
 }
 
+# Function to add rbenv to the PATH
+add_rbenv_to_path() {
+    SHELL_CONFIG_FILE=""
+    if [[ $SHELL == *zsh* ]]; then
+        SHELL_CONFIG_FILE=~/.zprofile
+    elif [[ $SHELL == *bash* ]]; then
+        SHELL_CONFIG_FILE=~/.bash_profile
+    else
+        # Default to ~/.profile if the shell is not recognized
+        SHELL_CONFIG_FILE=~/.profile
+    fi
+
+    if ! grep -q 'export PATH="$HOME/.rbenv/bin:$PATH"' "$SHELL_CONFIG_FILE"; then
+        echo 'Adding rbenv to the PATH in $SHELL_CONFIG_FILE'
+        echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> "$SHELL_CONFIG_FILE"
+        echo 'eval "$(rbenv init -)"' >> "$SHELL_CONFIG_FILE"
+        source "$SHELL_CONFIG_FILE"
+        echo "rbenv successfully added to the PATH."
+    else
+        echo "rbenv is already in the PATH."
+        source "$SHELL_CONFIG_FILE"
+    fi
+}
+
+# Function to add Fastlane to the PATH
+add_fastlane_to_path() {
+    SHELL_CONFIG_FILE=""
+    if [[ $SHELL == *zsh* ]]; then
+        SHELL_CONFIG_FILE=~/.zprofile
+    elif [[ $SHELL == *bash* ]]; then
+        SHELL_CONFIG_FILE=~/.bash_profile
+    else
+        # Default to ~/.profile if the shell is not recognized
+        SHELL_CONFIG_FILE=~/.profile
+    fi
+
+    # Check if Fastlane's bin path is in the PATH
+    if ! grep -q "export PATH=\"\$HOME/.fastlane/bin:\$PATH\"" "$SHELL_CONFIG_FILE"; then
+        echo "Adding Fastlane to the PATH in $SHELL_CONFIG_FILE"
+        echo 'export PATH="$HOME/.fastlane/bin:$PATH"' >> "$SHELL_CONFIG_FILE"
+        source "$SHELL_CONFIG_FILE"
+        echo "Fastlane successfully added to the PATH."
+    else
+        echo "Fastlane is already in the PATH."
+        source "$SHELL_CONFIG_FILE"
+    fi
+}
 
 installBrew() {
    
@@ -119,14 +166,59 @@ installTools() {
 }
 
 installFastlane() {
-    brew install rbenv
-    echo 'eval "$(rbenv init - zsh)"' >> ~/.zshrc
-    echo 'eval "$(rbenv init - bash)"' >> ~/.bashrc
-    sourceEnv
-    rbenv install 3.1.0
-    rbenv global 3.1.0
-    sudo gem uninstall fastlane
-    sudo gem install fastlane
+    installRuby
+    # Check if Fastlane is installed
+    if command -v fastlane >/dev/null 2>&1; then
+        echo "Fastlane is already installed."
+        add_fastlane_to_path
+    else
+        echo "Fastlane is not installed. Installing now..."
+        
+        # Install Fastlane using Homebrew or RubyGems
+        if command -v brew >/dev/null 2>&1; then
+            brew install fastlane
+        else
+            echo "Homebrew is not installed. Installing Fastlane via RubyGems..."
+            sudo gem install fastlane
+        fi
+        
+        add_fastlane_to_path
+        echo "Fastlane installation complete."
+    fi
+    
+    # Verify Fastlane installation
+    if command -v fastlane >/dev/null 2>&1; then
+        echo "Fastlane was successfully installed!"
+        fastlane --version
+    else
+        echo "Fastlane installation failed."
+    fi
+}
+
+installRuby() {
+    # Check if rbenv is installed
+    # Install a specific version of Ruby using rbenv
+    RUBY_VERSION="3.2.0"  # You can change this to any version you want to install
+    
+    if ! rbenv versions | grep -q "$RUBY_VERSION"; then
+        echo "Installing Ruby version $RUBY_VERSION..."
+        rbenv install "$RUBY_VERSION"
+    else
+        echo "Ruby version $RUBY_VERSION is already installed."
+    fi
+    
+    # Set the installed Ruby version as global
+    echo "Setting Ruby version $RUBY_VERSION as the global version..."
+    rbenv global "$RUBY_VERSION"
+    rbenv rehash
+    
+    # Verify the installed Ruby version
+    if [[ "$(ruby -v)" == *"$RUBY_VERSION"* ]]; then
+        echo "Ruby version $RUBY_VERSION was successfully set as the global version!"
+        ruby -v
+    else
+        echo "Failed to set Ruby version $RUBY_VERSION as the global version."
+    fi
 }
 
 installApp() {
