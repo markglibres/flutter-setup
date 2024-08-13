@@ -8,9 +8,20 @@ installBrew() {
     else
         echo "Homebrew is not installed, installing now..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        
+        # Determine which shell configuration file to update
+        SHELL_CONFIG_FILE=""
+        if [[ $SHELL == *zsh* ]]; then
+            SHELL_CONFIG_FILE=~/.zprofile
+        elif [[ $SHELL == *bash* ]]; then
+            SHELL_CONFIG_FILE=~/.bash_profile
+        else
+            # Default to ~/.profile if the shell is not recognized
+            SHELL_CONFIG_FILE=~/.profile
+        fi
     
         # Add Homebrew to the PATH
-        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+        echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> "$SHELL_CONFIG_FILE"
         eval "$(/opt/homebrew/bin/brew shellenv)"
         
         echo "Homebrew installation complete"
