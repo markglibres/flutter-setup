@@ -80,10 +80,13 @@ installBrew() {
         echo "Homebrew installation complete"
     fi
 
-    # Fixing permissions and adding safe directories
-    echo "Fixing Homebrew permissions and adding safe directories..."
-    sudo chown -R $(whoami) /opt/homebrew/Library/Taps/homebrew/homebrew-core
-    sudo chown -R $(whoami) /opt/homebrew/Library/Taps/homebrew/homebrew-cask
+    # Fixing permissions for the entire Homebrew directory
+    echo "Fixing Homebrew permissions..."
+    sudo chown -R $(whoami) /opt/homebrew
+    sudo chmod -R u+rw /opt/homebrew
+
+    # Adding safe directories for Git
+    echo "Adding Homebrew directories to Git safe directory list..."
     git config --global --add safe.directory /opt/homebrew/Library/Taps/homebrew/homebrew-core
     git config --global --add safe.directory /opt/homebrew/Library/Taps/homebrew/homebrew-cask
     echo "Permissions and safe directories have been updated."
@@ -100,6 +103,7 @@ installBrew() {
 
     sourceEnv
 }
+
 
 # Add Homebrew to the PATH if not already present
 add_brew_to_path() {
