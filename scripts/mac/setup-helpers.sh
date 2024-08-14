@@ -313,29 +313,43 @@ installAndroidPackage() {
 
 installFlutter() {
     sourceEnv
-    if ! command -v flutter &> /dev/null; then
+
+    # Fetch the latest version of Flutter
+    LATEST_FLUTTER_VERSION=$(brew info --cask flutter | grep -o "flutter@[0-9.]*" | head -n 1 | cut -d'@' -f2)
+
+    # Check if Flutter is installed and get the installed version
+    if command -v flutter &> /dev/null; then
+        INSTALLED_FLUTTER_VERSION=$(flutter --version | grep 'Flutter' | awk '{print $2}')
+
+        if [ "$INSTALLED_FLUTTER_VERSION" == "$LATEST_FLUTTER_VERSION" ]; then
+            echo "Flutter is already at the latest version ($INSTALLED_FLUTTER_VERSION). Skipping installation..."
+        else
+            echo "Updating Flutter to the latest version ($LATEST_FLUTTER_VERSION)..."
+            brew reinstall --cask flutter
+        fi
+    else
         echo "Installing Flutter..."
         brew install --cask flutter
-        addToPath 'export PATH="`pwd`/flutter/bin:$PATH"'
-        flutter config --android-sdk $ANDROID_HOME
-        flutter doctor --android-licenses
-        flutter doctor
-    else
-        echo "Flutter found.. skipping..."
     fi
 
+    addToPath 'export PATH="`pwd`/flutter/bin:$PATH"'
+    flutter config --android-sdk $ANDROID_HOME
+    flutter doctor --android-licenses
+    flutter doctor
+
     # Fix permissions issue
-    FLUTTER_DIR="/opt/homebrew/Caskroom/flutter/$(flutter --version | grep 'Flutter' | awk '{print $2}')/flutter"
+    FLUTTER_DIR="/opt/homebrew/Caskroom/flutter/$LATEST_FLUTTER_VERSION/flutter"
     
     if [ -d "$FLUTTER_DIR" ]; then
         echo "Changing ownership and permissions for Flutter directory: $FLUTTER_DIR"
-        sudo chown -R $(whoami):$(whoami) "$FLUTTER_DIR"
+        sudo chown -R $(whoami) "$FLUTTER_DIR"
         sudo chmod -R 777 "$FLUTTER_DIR"
         echo "Ownership and permissions have been updated successfully."
     else
         echo "Error: Flutter directory not found."
     fi
 }
+
 
 
 installVSCode() {
