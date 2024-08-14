@@ -198,30 +198,48 @@ get_rbenv_path() {
     echo 'eval "$(rbenv init -)"'
 }
 
-# Function to install Fastlane if not already installed
+# Function to install or upgrade Fastlane
 installFastlane() {
     installRuby
 
+    # Check if Fastlane is installed
     if command -v fastlane >/dev/null 2>&1; then
         echo "Fastlane is already installed."
-        addToPath "$(get_fastlane_path)"
+        
+        # Get the installed version
+        INSTALLED_VERSION=$(fastlane --version | awk '{print $2}')
+        
+        # Get the latest version available via Homebrew
+        LATEST_VERSION=$(brew info fastlane | grep -o "fastlane: .*" | awk '{print $2}')
+        
+        # Compare installed version with the latest version
+        if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
+            echo "A new version of Fastlane is available. Upgrading from $INSTALLED_VERSION to $LATEST_VERSION..."
+            brew upgrade fastlane
+            echo "Fastlane upgraded to version $LATEST_VERSION."
+        else
+            echo "Fastlane is already at the latest version ($INSTALLED_VERSION)."
+        fi
     else
         echo "Fastlane is not installed. Installing now..."
         brew install fastlane
-        addToPath "$(get_fastlane_path)"
         echo "Fastlane installation complete."
     fi
 
+    # Add Fastlane to PATH
+    addToPath "$(get_fastlane_path)"
+    
     sourceEnv
 
     # Verify Fastlane installation
     if command -v fastlane >/dev/null 2>&1; then
-        echo "Fastlane was successfully installed!"
+        echo "Fastlane was successfully installed or upgraded!"
         fastlane --version
     else
         echo "Fastlane installation failed."
     fi
 }
+
 
 get_fastlane_path() {
     echo 'export PATH="$HOME/.fastlane/bin:$PATH"'
