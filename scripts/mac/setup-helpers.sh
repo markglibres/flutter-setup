@@ -318,12 +318,16 @@ installAndroidPackage() {
 installFlutter() {
     sourceEnv
 
+    # Force Homebrew to update
+    echo "Updating Homebrew..."
+    brew update
+
     # Fetch the latest version of Flutter
-    LATEST_FLUTTER_VERSION=$(brew info --cask flutter | grep -o "flutter@[0-9.]*" | head -n 1 | cut -d'@' -f2)
+    LATEST_FLUTTER_VERSION=$(brew info --cask flutter | grep -Eo 'flutter@[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 | cut -d'@' -f2)
 
     # Check if Flutter is installed and get the installed version
     if command -v flutter &> /dev/null; then
-        INSTALLED_FLUTTER_VERSION=$(flutter --version | grep 'Flutter' | awk '{print $2}')
+        INSTALLED_FLUTTER_VERSION=$(flutter --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
 
         if [ "$INSTALLED_FLUTTER_VERSION" == "$LATEST_FLUTTER_VERSION" ]; then
             echo "Flutter is already at the latest version ($INSTALLED_FLUTTER_VERSION). Skipping installation..."
@@ -353,6 +357,7 @@ installFlutter() {
         echo "Error: Flutter directory not found."
     fi
 }
+
 
 
 
