@@ -312,20 +312,20 @@ installFlutter() {
         flutter config --android-sdk $ANDROID_HOME
         flutter doctor --android-licenses
         flutter doctor
-        
-        # Fix permissions issue
-        FLUTTER_DIR="/opt/homebrew/Caskroom/flutter/$(flutter --version | grep 'Flutter' | awk '{print $2}')/flutter"
-        
-        if [ -d "$FLUTTER_DIR" ]; then
-            echo "Changing ownership and permissions for Flutter directory: $FLUTTER_DIR"
-            sudo chown -R $(whoami):$(whoami) "$FLUTTER_DIR"
-            sudo chmod -R 777 "$FLUTTER_DIR"
-            echo "Ownership and permissions have been updated successfully."
-        else
-            echo "Error: Flutter directory not found."
-        fi
     else
         echo "Flutter found.. skipping..."
+    fi
+
+    # Fix permissions issue
+    FLUTTER_DIR="/opt/homebrew/Caskroom/flutter/$(flutter --version | grep 'Flutter' | awk '{print $2}')/flutter"
+    
+    if [ -d "$FLUTTER_DIR" ]; then
+        echo "Changing ownership and permissions for Flutter directory: $FLUTTER_DIR"
+        sudo chown -R $(whoami):$(whoami) "$FLUTTER_DIR"
+        sudo chmod -R 777 "$FLUTTER_DIR"
+        echo "Ownership and permissions have been updated successfully."
+    else
+        echo "Error: Flutter directory not found."
     fi
 }
 
