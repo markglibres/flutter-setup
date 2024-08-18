@@ -435,35 +435,37 @@ installFlutter() {
     echo "Updating Homebrew..."
     brew update
 
-    # Get the installed Flutter version
+    # Fetch the latest version of Flutter available via Homebrew
+    LATEST_FLUTTER_VERSION=$(brew info --cask flutter | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+
+    # Check if Flutter is installed and get the installed version
     if command -v flutter &> /dev/null; then
         INSTALLED_FLUTTER_VERSION=$(flutter --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
-
-        # Fetch the latest version of Flutter available via Homebrew
-        LATEST_FLUTTER_VERSION=$(brew info --cask flutter | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
-
-        if [ -z "$LATEST_FLUTTER_VERSION" ]; then
-            echo "Could not fetch the latest Flutter version from Homebrew. Skipping update check."
-            return
-        fi
 
         if [ "$INSTALLED_FLUTTER_VERSION" == "$LATEST_FLUTTER_VERSION" ]; then
             echo "Flutter is already at the latest version ($INSTALLED_FLUTTER_VERSION). Skipping installation..."
         else
             echo "Updating Flutter from version $INSTALLED_FLUTTER_VERSION to $LATEST_FLUTTER_VERSION..."
             brew reinstall --cask flutter
-            sudo chmod -R 777 "$FLUTTER_DIR"
         fi
     else
         echo "Installing Flutter..."
         brew install --cask flutter
+    fi
+
+    # Set the Flutter directory path based on the installation location
+    FLUTTER_DIR="/opt/homebrew/Caskroom/flutter/$LATEST_FLUTTER_VERSION/flutter"
+    
+    # Verify if the FLUTTER_DIR exists before applying permissions
+    if [ -d "$FLUTTER_DIR" ]; then
+        echo "Changing permissions for Flutter directory: $FLUTTER_DIR"
         sudo chmod -R 777 "$FLUTTER_DIR"
+    else
+        echo "Error: Flutter directory not found at $FLUTTER_DIR."
     fi
 
     addToPath 'export PATH="`pwd`/flutter/bin:$PATH"'
 
-    # Fix permissions issue
-    FLUTTER_DIR="/opt/homebrew/Caskroom/flutter/$LATEST_FLUTTER_VERSION/flutter"
     git config --global --add safe.directory $FLUTTER_DIR
     
     flutter config --android-sdk $ANDROID_HOME
