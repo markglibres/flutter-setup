@@ -1,5 +1,63 @@
 #!/bin/bash
 
+# Function to create a user group and add the current user to the group
+createBrewGroup() {
+    GROUP_NAME="brew_users"
+    
+    # Check if the group already exists
+    if dscl . -list /Groups | grep -q "^$GROUP_NAME$"; then
+        echo "Group $GROUP_NAME already exists."
+    else
+        echo "Creating group $GROUP_NAME..."
+        sudo dscl . -create /Groups/$GROUP_NAME
+        if [ $? -eq 0 ]; then
+            echo "Group $GROUP_NAME created successfully."
+        else
+            echo "Failed to create group $GROUP_NAME. Exiting."
+            exit 1
+        fi
+    fi
+
+    # Add the current user to the group
+    CURRENT_USER=$(whoami)
+    if id -nG "$CURRENT_USER" | grep -qw "$GROUP_NAME"; then
+        echo "User $CURRENT_USER is already in group $GROUP_NAME."
+    else
+        echo "Adding user $CURRENT_USER to group $GROUP_NAME..."
+        sudo dscl . -append /Groups/$GROUP_NAME GroupMembership $CURRENT_USER
+        if [ $? -eq 0 ]; then
+            echo "User $CURRENT_USER added to group $GROUP_NAME successfully."
+        else
+            echo "Failed to add user $CURRENT_USER to group $GROUP_NAME. Exiting."
+            exit 1
+        fi
+    fi
+
+    # Flush the directory service cache to ensure the group is recognized
+    echo "Flushing directory service cache..."
+    sudo dscacheutil -flushcache
+    echo "Directory service cache flushed."
+
+    # Retrieve the GID of the group
+    GROUP_GID=$(dscl . -read /Groups/$GROUP_NAME | grep PrimaryGroupID | awk '{print $2}')
+
+    # Set permissions for /opt/homebrew using GID
+    if [ -d "/opt/homebrew" ]; then
+        echo "Setting permissions for /opt/homebrew using GID $GROUP_GID..."
+        sudo chown -R :$GROUP_GID /opt/homebrew
+        if [ $? -eq 0 ]; then
+            sudo chmod -R g+w /opt/homebrew
+            sudo find /opt/homebrew -type d -exec chmod g+s {} \;
+            echo "Permissions have been updated successfully for /opt/homebrew."
+        else
+            echo "Failed to change ownership to group $GROUP_NAME (GID: $GROUP_GID). Exiting."
+            exit 1
+        fi
+    else
+        echo "/opt/homebrew directory not found. Skipping permissions adjustment."
+    fi
+}
+
 install() {
     COMMAND=$1
     INSTALL_CMD=$2
@@ -100,23 +158,12 @@ sourceEnv() {
     echo "Path and environment variables refreshed in the current terminal session."
 }
 
-# Function to check and fix Homebrew installation
+# Function to check and update Homebrew installation, skip ownership changes
 installBrew() {
     if command -v brew >/dev/null 2>&1; then
-        echo "Homebrew is already installed"
+        echo "Homebrew is already installed. Updating Homebrew..."
         brew update
         add_brew_to_path
-
-        # Fix permissions if Homebrew is not installed globally
-        HOMEBREW_PREFIX=$(brew --prefix)
-        if [ ! -w "$HOMEBREW_PREFIX" ]; then
-            echo "Fixing Homebrew permissions..."
-            sudo chown -R $(whoami) "$HOMEBREW_PREFIX"
-            sudo chmod -R u+rw "$HOMEBREW_PREFIX"
-            echo "Permissions have been updated."
-        else
-            echo "Homebrew permissions are correct."
-        fi
     else
         echo "Homebrew is not installed, installing now..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -228,21 +275,31 @@ installFastlane() {
     export HOMEBREW_NO_AUTO_UPDATE=1
     export HOMEBREW_NO_ENV_HINTS=1
 
-    # Check if Fastlane is installed
+    # Uninstall Fastlane if installed via gem to avoid conflicts
+    if gem list -i "^fastlane$" >/dev/null 2>&1; then
+        echo "Fastlane is installed via gem. Uninstalling gem version to avoid conflicts..."
+        sudo gem uninstall fastlane
+    fi
+
+    # Check if Fastlane is installed via Homebrew
     if command -v fastlane >/dev/null 2>&1; then
         echo "Fastlane is already installed."
 
         # Get the installed version
         INSTALLED_VERSION=$(fastlane --version | awk '{print $2}')
 
+        # Get the Fastlane installation path
+        FASTLANE_PATH=$(command -v fastlane)
+
         # Check if Fastlane is installed globally
-        if [[ "$(which fastlane)" != "/usr/local/bin/fastlane" && "$(which fastlane)" != "/opt/homebrew/bin/fastlane" ]]; then
-            echo "Fastlane is installed, but not globally. Reinstalling it globally..."
+        if [[ "$FASTLANE_PATH" != "/usr/local/bin/fastlane" && "$FASTLANE_PATH" != "/opt/homebrew/bin/fastlane" ]]; then
+            echo "Fastlane is installed, but not globally. Reinstalling it globally via Homebrew..."
             brew uninstall fastlane --force
             brew install fastlane
             echo "Fastlane reinstalled globally."
         else
             echo "Fastlane is installed globally."
+
             # Get the latest version available via Homebrew using JSON output
             LATEST_VERSION=$(brew info --json=v1 fastlane | jq -r '.[0].versions.stable')
 
@@ -256,12 +313,12 @@ installFastlane() {
             fi
         fi
     else
-        echo "Fastlane is not installed. Installing now globally..."
+        echo "Fastlane is not installed. Installing now globally via Homebrew..."
         brew install fastlane
         echo "Fastlane installation complete."
     fi
 
-    # Correctly add the directory containing the fastlane executable to PATH
+    # Correctly add the directory containing the Fastlane executable to PATH
     FASTLANE_EXECUTABLE=$(brew --prefix fastlane)/libexec/bin/fastlane
     if [ -f "$FASTLANE_EXECUTABLE" ]; then
         FASTLANE_BIN_DIR=$(dirname "$FASTLANE_EXECUTABLE")
@@ -278,6 +335,8 @@ installFastlane() {
         echo "Fastlane installation failed."
     fi
 }
+
+
 
 # Function to install Android Studio and SDK
 installAndroidStudioAndSdk() {
@@ -376,18 +435,24 @@ installFlutter() {
     echo "Updating Homebrew..."
     brew update
 
-    # Fetch the latest version of Flutter
-    LATEST_FLUTTER_VERSION=$(brew info --cask flutter | grep -Eo 'flutter@[0-9]+\.[0-9]+\.[0-9]+' | head -n 1 | cut -d'@' -f2)
-
-    # Check if Flutter is installed and get the installed version
+    # Get the installed Flutter version
     if command -v flutter &> /dev/null; then
         INSTALLED_FLUTTER_VERSION=$(flutter --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+
+        # Fetch the latest version of Flutter available via Homebrew
+        LATEST_FLUTTER_VERSION=$(brew info --cask flutter | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
+
+        if [ -z "$LATEST_FLUTTER_VERSION" ]; then
+            echo "Could not fetch the latest Flutter version from Homebrew. Skipping update check."
+            return
+        fi
 
         if [ "$INSTALLED_FLUTTER_VERSION" == "$LATEST_FLUTTER_VERSION" ]; then
             echo "Flutter is already at the latest version ($INSTALLED_FLUTTER_VERSION). Skipping installation..."
         else
-            echo "Updating Flutter to the latest version ($LATEST_FLUTTER_VERSION)..."
+            echo "Updating Flutter from version $INSTALLED_FLUTTER_VERSION to $LATEST_FLUTTER_VERSION..."
             brew reinstall --cask flutter
+            sudo chmod -R 777 "$FLUTTER_DIR"
         fi
     else
         echo "Installing Flutter..."
@@ -405,6 +470,7 @@ installFlutter() {
     flutter doctor --android-licenses
     flutter doctor
 }
+
 
 installVSCode() {
     sourceEnv
