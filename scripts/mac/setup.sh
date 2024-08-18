@@ -55,6 +55,7 @@ sudo softwareupdate --install-rosetta --agree-to-license
 # installFlutter
 # installVSCode
 
+# Main Execution
 set_homebrew_path
 installBrew
 installXCode
@@ -67,6 +68,8 @@ installVSCode
 installVSCodeExtension Dart-Code.flutter
 
 flutter doctor
+
+
 
 sourceEnv
 

@@ -7,7 +7,7 @@ install() {
     # Check if the command is available globally
     if ! command -v "$COMMAND" >/dev/null 2>&1; then
         echo "$COMMAND not found... installing globally..."
-        eval "sudo $INSTALL_CMD"
+        eval "$INSTALL_CMD"
     else
         echo "$COMMAND found... checking if it's globally installed..."
 
@@ -25,10 +25,24 @@ install() {
 
         if [ "$GLOBAL" = false ]; then
             echo "$COMMAND is not installed globally. Reinstalling globally..."
-            eval "sudo $INSTALL_CMD"
+            eval "$INSTALL_CMD"
         else
             echo "$COMMAND is installed globally. Skipping installation."
         fi
+    fi
+}
+
+# Function to uninstall adoptopenjdk and replace with temurin
+replaceAdoptOpenJDKWithTemurin() {
+    if brew list --cask | grep -q "^adoptopenjdk$"; then
+        echo "adoptopenjdk is installed. Uninstalling adoptopenjdk..."
+        brew uninstall --cask adoptopenjdk
+        echo "Installing temurin as a replacement..."
+        brew install --cask temurin
+        echo "temurin installed successfully."
+    else
+        echo "adoptopenjdk is not installed. Installing temurin..."
+        brew install --cask temurin
     fi
 }
 
@@ -45,7 +59,6 @@ set_homebrew_path() {
 }
 
 # Add a command to the appropriate shell configuration file and source it
-# Add to PATH and source configuration file
 addToPath() {
     LINE=$1
     SHELL_CONFIG_FILE=$(get_shell_config_file)
@@ -88,9 +101,10 @@ sourceEnv() {
 }
 
 # Function to check and fix Homebrew installation
-checkAndFixBrew() {
+installBrew() {
     if command -v brew >/dev/null 2>&1; then
         echo "Homebrew is already installed"
+        brew update
         add_brew_to_path
 
         # Fix permissions if Homebrew is not installed globally
@@ -247,11 +261,11 @@ installFastlane() {
         echo "Fastlane installation complete."
     fi
 
-    # Add Fastlane to PATH
-    FASTLANE_PATH=$(get_fastlane_path)
-
-    if [ -d "$FASTLANE_PATH" ]; then
-        addToPath "$FASTLANE_PATH"
+    # Correctly add the directory containing the fastlane executable to PATH
+    FASTLANE_EXECUTABLE=$(brew --prefix fastlane)/libexec/bin/fastlane
+    if [ -f "$FASTLANE_EXECUTABLE" ]; then
+        FASTLANE_BIN_DIR=$(dirname "$FASTLANE_EXECUTABLE")
+        addToPath "export PATH=\$PATH:$FASTLANE_BIN_DIR"
     fi
 
     sourceEnv
@@ -265,16 +279,12 @@ installFastlane() {
     fi
 }
 
-
-get_fastlane_path() {
-    # This function returns the path where Fastlane is installed
-    echo "$(brew --prefix fastlane)/libexec/bin"
-}
-
 # Function to install Android Studio and SDK
 installAndroidStudioAndSdk() {
     sourceEnv
-    install java 'brew install --cask adoptopenjdk8'
+
+    # Replace adoptopenjdk with temurin
+    replaceAdoptOpenJDKWithTemurin
 
     # Install Android Studio using Homebrew
     if ! brew list --cask | grep -q "^android-studio$"; then
