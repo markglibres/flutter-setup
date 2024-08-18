@@ -214,7 +214,7 @@ installFastlane() {
         INSTALLED_VERSION=$(fastlane --version | awk '{print $2}')
 
         # Get the latest version available via Homebrew
-        LATEST_VERSION=$(brew info fastlane | grep -o "fastlane: .*" | awk '{print $2}')
+        LATEST_VERSION=$(brew list --versions fastlane | awk '{print $2}')
 
         # Compare installed version with the latest version
         if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
