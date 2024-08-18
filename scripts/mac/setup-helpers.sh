@@ -202,16 +202,20 @@ get_rbenv_path() {
 installFastlane() {
     installRuby
 
+    # Disable Homebrew auto-update to avoid unnecessary delays
+    export HOMEBREW_NO_AUTO_UPDATE=1
+    export HOMEBREW_NO_ENV_HINTS=1
+
     # Check if Fastlane is installed
     if command -v fastlane >/dev/null 2>&1; then
         echo "Fastlane is already installed."
-        
+
         # Get the installed version
         INSTALLED_VERSION=$(fastlane --version | awk '{print $2}')
-        
+
         # Get the latest version available via Homebrew
         LATEST_VERSION=$(brew info fastlane | grep -o "fastlane: .*" | awk '{print $2}')
-        
+
         # Compare installed version with the latest version
         if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
             echo "A new version of Fastlane is available. Upgrading from $INSTALLED_VERSION to $LATEST_VERSION..."
@@ -227,8 +231,12 @@ installFastlane() {
     fi
 
     # Add Fastlane to PATH
-    addToPath "$(get_fastlane_path)"
-    
+    FASTLANE_PATH=$(get_fastlane_path)
+
+    if [ -d "$FASTLANE_PATH" ]; then
+        addToPath "$FASTLANE_PATH"
+    fi
+
     sourceEnv
 
     # Verify Fastlane installation
@@ -242,7 +250,8 @@ installFastlane() {
 
 
 get_fastlane_path() {
-    echo 'export PATH="$HOME/.fastlane/bin:$PATH"'
+    # This function returns the path where Fastlane is installed
+    echo "$(brew --prefix fastlane)/libexec/bin"
 }
 
 # Function to install Android Studio and SDK
