@@ -4,12 +4,31 @@ install() {
     COMMAND=$1
     INSTALL_CMD=$2
 
-    # Check if the command is available
+    # Check if the command is available globally
     if ! command -v "$COMMAND" >/dev/null 2>&1; then
-        echo "$COMMAND not found... installing...."
-        eval "$INSTALL_CMD"
+        echo "$COMMAND not found... installing globally..."
+        eval "sudo $INSTALL_CMD"
     else
-        echo "$COMMAND found... skipping..."
+        echo "$COMMAND found... checking if it's globally installed..."
+
+        # Check if the command is in a global path
+        GLOBAL_PATHS=("/usr/local/bin" "/opt/homebrew/bin")
+        INSTALLED_PATH=$(command -v "$COMMAND")
+        GLOBAL=false
+
+        for PATH in "${GLOBAL_PATHS[@]}"; do
+            if [[ "$INSTALLED_PATH" == "$PATH"* ]]; then
+                GLOBAL=true
+                break
+            fi
+        done
+
+        if [ "$GLOBAL" = false ]; then
+            echo "$COMMAND is not installed globally. Reinstalling globally..."
+            eval "sudo $INSTALL_CMD"
+        else
+            echo "$COMMAND is installed globally. Skipping installation."
+        fi
     fi
 }
 
@@ -68,11 +87,22 @@ sourceEnv() {
     echo "Path and environment variables refreshed in the current terminal session."
 }
 
-# Function to install Homebrew if not already installed
-installBrew() {
+# Function to check and fix Homebrew installation
+checkAndFixBrew() {
     if command -v brew >/dev/null 2>&1; then
         echo "Homebrew is already installed"
         add_brew_to_path
+
+        # Fix permissions if Homebrew is not installed globally
+        HOMEBREW_PREFIX=$(brew --prefix)
+        if [ ! -w "$HOMEBREW_PREFIX" ]; then
+            echo "Fixing Homebrew permissions..."
+            sudo chown -R $(whoami) "$HOMEBREW_PREFIX"
+            sudo chmod -R u+rw "$HOMEBREW_PREFIX"
+            echo "Permissions have been updated."
+        else
+            echo "Homebrew permissions are correct."
+        fi
     else
         echo "Homebrew is not installed, installing now..."
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -80,30 +110,8 @@ installBrew() {
         echo "Homebrew installation complete"
     fi
 
-    # Fixing permissions for the entire Homebrew directory
-    echo "Fixing Homebrew permissions..."
-    sudo chown -R $(whoami) /opt/homebrew
-    sudo chmod -R u+rw /opt/homebrew
-
-    # Adding safe directories for Git
-    echo "Adding Homebrew directories to Git safe directory list..."
-    git config --global --add safe.directory /opt/homebrew/Library/Taps/homebrew/homebrew-core
-    git config --global --add safe.directory /opt/homebrew/Library/Taps/homebrew/homebrew-cask
-    echo "Permissions and safe directories have been updated."
-
-    sourceEnv
-
-    # Verify Homebrew installation
-    if command -v brew >/dev/null 2>&1; then
-        echo "Homebrew was successfully installed!"
-        brew --version
-    else
-        echo "Homebrew installation failed or not found in PATH"
-    fi
-
     sourceEnv
 }
-
 
 # Add Homebrew to the PATH if not already present
 add_brew_to_path() {
@@ -213,19 +221,28 @@ installFastlane() {
         # Get the installed version
         INSTALLED_VERSION=$(fastlane --version | awk '{print $2}')
 
-        # Get the latest version available via Homebrew using JSON output
-        LATEST_VERSION=$(brew info --json=v1 fastlane | jq -r '.[0].versions.stable')
-
-        # Compare installed version with the latest version
-        if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
-            echo "A new version of Fastlane is available. Upgrading from $INSTALLED_VERSION to $LATEST_VERSION..."
-            brew upgrade fastlane
-            echo "Fastlane upgraded to version $LATEST_VERSION."
+        # Check if Fastlane is installed globally
+        if [[ "$(which fastlane)" != "/usr/local/bin/fastlane" && "$(which fastlane)" != "/opt/homebrew/bin/fastlane" ]]; then
+            echo "Fastlane is installed, but not globally. Reinstalling it globally..."
+            brew uninstall fastlane --force
+            brew install fastlane
+            echo "Fastlane reinstalled globally."
         else
-            echo "Fastlane is already at the latest version ($INSTALLED_VERSION)."
+            echo "Fastlane is installed globally."
+            # Get the latest version available via Homebrew using JSON output
+            LATEST_VERSION=$(brew info --json=v1 fastlane | jq -r '.[0].versions.stable')
+
+            # Compare installed version with the latest version
+            if [ "$INSTALLED_VERSION" != "$LATEST_VERSION" ]; then
+                echo "A new version of Fastlane is available. Upgrading from $INSTALLED_VERSION to $LATEST_VERSION..."
+                brew upgrade fastlane
+                echo "Fastlane upgraded to version $LATEST_VERSION."
+            else
+                echo "Fastlane is already at the latest version ($INSTALLED_VERSION)."
+            fi
         fi
     else
-        echo "Fastlane is not installed. Installing now..."
+        echo "Fastlane is not installed. Installing now globally..."
         brew install fastlane
         echo "Fastlane installation complete."
     fi
@@ -377,19 +394,7 @@ installFlutter() {
     flutter config --android-sdk $ANDROID_HOME
     flutter doctor --android-licenses
     flutter doctor
-    
-    # if [ -d "$FLUTTER_DIR" ]; then
-    #    echo "Changing ownership and permissions for Flutter directory: $FLUTTER_DIR"
-    #    sudo chown -R $(whoami) "$FLUTTER_DIR"
-    #    sudo chmod -R 777 "$FLUTTER_DIR"
-    #    echo "Ownership and permissions have been updated successfully."
-    #else
-    #    echo "Error: Flutter directory not found."
-    #fi
 }
-
-
-
 
 installVSCode() {
     sourceEnv
@@ -437,7 +442,6 @@ installVSCodeExtension() {
     fi
 }
 
-
 installApp() {
     sourceEnv
     APP="/Applications/$1.app"
@@ -480,4 +484,3 @@ installXCode() {
 installiOSSimulator() {
     xcodebuild -downloadPlatform iOS
 }
-
