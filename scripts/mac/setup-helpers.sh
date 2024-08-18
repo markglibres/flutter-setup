@@ -356,24 +356,27 @@ installFlutter() {
     else
         echo "Installing Flutter..."
         brew install --cask flutter
+        sudo chmod -R 777 "$FLUTTER_DIR"
     fi
 
     addToPath 'export PATH="`pwd`/flutter/bin:$PATH"'
-    flutter config --android-sdk $ANDROID_HOME
-    flutter doctor --android-licenses
-    flutter doctor
 
     # Fix permissions issue
     FLUTTER_DIR="/opt/homebrew/Caskroom/flutter/$LATEST_FLUTTER_VERSION/flutter"
+    git config --global --add safe.directory $FLUTTER_DIR
     
-    if [ -d "$FLUTTER_DIR" ]; then
-        echo "Changing ownership and permissions for Flutter directory: $FLUTTER_DIR"
-        sudo chown -R $(whoami) "$FLUTTER_DIR"
-        sudo chmod -R 777 "$FLUTTER_DIR"
-        echo "Ownership and permissions have been updated successfully."
-    else
-        echo "Error: Flutter directory not found."
-    fi
+    flutter config --android-sdk $ANDROID_HOME
+    flutter doctor --android-licenses
+    flutter doctor
+    
+    # if [ -d "$FLUTTER_DIR" ]; then
+    #    echo "Changing ownership and permissions for Flutter directory: $FLUTTER_DIR"
+    #    sudo chown -R $(whoami) "$FLUTTER_DIR"
+    #    sudo chmod -R 777 "$FLUTTER_DIR"
+    #    echo "Ownership and permissions have been updated successfully."
+    #else
+    #    echo "Error: Flutter directory not found."
+    #fi
 }
 
 
